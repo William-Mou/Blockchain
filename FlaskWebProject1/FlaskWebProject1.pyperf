@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<ProfilingTarget xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ProjectTarget>
+    <TargetProject>28b4e55a-7fa2-4d36-8324-af94f659496c</TargetProject>
+    <FriendlyName>FlaskWebProject1</FriendlyName>
+  </ProjectTarget>
+</ProfilingTarget>
