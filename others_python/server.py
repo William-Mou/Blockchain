@@ -13,12 +13,12 @@ class Blockchain(object):
         self.chain = []
         self.current_transactions = []
         self.nodes = set()
-        # Create the genesis block
+        # 創建創世塊
         self.new_block(previous_hash=1, proof=100)
         
     def register_node(self, address):
         """
-        Add a new node to the list of nodes
+        在清單中加入新的節點
         :param address: <str> Address of node. Eg. 'http://192.168.0.5:5000'
         :return: None
         """
@@ -27,9 +27,9 @@ class Blockchain(object):
         self.nodes.add(parsed_url.netloc)
 
     def new_block(self, proof, previous_hash=None):
-        # Creates a new Block and adds it to the chain
+        # 創建一個新的塊並將其添加到鏈中
         """
-        生成新块
+        生成新塊
         :param proof: <int> The proof given by the Proof of Work algorithm
         :param previous_hash: (Optional) <str> Hash of previous Block
         :return: <dict> New Block
@@ -43,7 +43,7 @@ class Blockchain(object):
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
 
-        # Reset the current list of transactions
+        # 重置當前的交易列表
         self.current_transactions = []
 
         self.chain.append(block)
@@ -67,27 +67,27 @@ class Blockchain(object):
         return self.last_block['index'] + 1
     
     @staticmethod
-    #從外部非實體化調用函數
+    # 從外部非實體化調用函數
     def hash(block):
         """
-        生成块的 SHA-256 hash值
+        生成塊的 SHA-256 hash值
         :param block: <dict> Block
         :return: <str>
         """
 
-        # We must make sure that the Dictionary is Ordered, or we'll have inconsistent hashes
+        # 我們必須確保字典是有序的，否則我們將有不一致的哈希值
         block_string = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(block_string).hexdigest()
 
     @property
-    #檢查參數後再傳入
+    # 檢查參數後再傳入
     def last_block(self):
         return self.chain[-1]
     
     @staticmethod
     def valid_proof(last_proof, proof):
         """
-        验证证明: 是否hash(last_proof, proof)以4个0开头?
+        驗證證明：是否hash(last_proof, proof)以4個0開頭？
         :param last_proof: <int> Previous Proof
         :param proof: <int> Current Proof
         :return: <bool> True if correct, False if not.
@@ -99,9 +99,9 @@ class Blockchain(object):
     
     def proof_of_work(self, last_proof):
         """
-        简单的工作量证明:
+        簡單的工作量证證明:
          - 查找一个 p' 使得 hash(pp') 以4个0开头
-         - p 是上一个块的证明,  p' 是当前的证明
+         - p 是上一個塊的證明,  p' 是當前的證明
         :param last_proof: <int>
         :return: <int>
         """
@@ -125,11 +125,11 @@ class Blockchain(object):
             print(f'{last_block}')
             print(f'{block}')
             print("\n-----------\n")
-            # Check that the hash of the block is correct
+            # 檢查塊的hash是否正確
             if block['previous_hash'] != self.hash(last_block):
                 return False
 
-            # Check that the Proof of Work is correct
+            # 檢查工作證明是否正確
             if not self.valid_proof(last_block['proof'], block['proof']):
                 return False
 
@@ -140,18 +140,18 @@ class Blockchain(object):
 
     def resolve_conflicts(self):
         """
-        共识算法解决冲突
-        使用网络中最长的链.
-        :return: <bool> True 如果链被取代, 否则为False
+        共識算法解決衝突
+        使用網路中最長的鏈.
+        :return: <bool> True 如果鏈被取代, 否則為False
         """
 
         neighbours = self.nodes
         new_chain = None
 
-        # We're only looking for chains longer than ours
+        # 只尋找比我們更長的鏈條
         max_length = len(self.chain)
 
-        # Grab and verify the chains from all the nodes in our network
+        # 抓取並驗證我們網絡中所有節點的鏈
         for node in neighbours:
             response = requests.get(f'http://{node}/chain')
 
@@ -159,44 +159,43 @@ class Blockchain(object):
                 length = response.json()['length']
                 chain = response.json()['chain']
 
-                # Check if the length is longer and the chain is valid
+                # 如果我們發現一個比我們的更長的、新的有效鏈條，就取代我們的鏈條
                 if length > max_length and self.valid_chain(chain):
                     max_length = length
                     new_chain = chain
 
-        # Replace our chain if we discovered a new, valid chain longer than ours
+        # 如果我們發現一個比我們的更長的新的有效鏈條，就取代我們的鏈條
         if new_chain:
             self.chain = new_chain
             return True
 
         return False
 
-# Instantiate our Node
+# 實體化我們的節點
 app = Flask(__name__)
 
-# Generate a globally unique address for this node
+# 建立一個node節點
 node_identifier = str(uuid4()).replace('-', '')
 
-# Instantiate the Blockchain
+# 實體化區塊
 blockchain = Blockchain()
-
 
 @app.route('/mine', methods=['GET'])
 def mine():
-    # We run the proof of work algorithm to get the next proof...
+    # 使用 proof of work 演算法來得到下一個 proof...
     last_block = blockchain.last_block
     last_proof = last_block['proof']
     proof = blockchain.proof_of_work(last_proof)
 
-    # 给工作量证明的节点提供奖励.
-    # 发送者为 "0" 表明是新挖出的币
+    # 给工作量證明的節點提供獎勵.
+    # 發送者為 "0" 表明是新挖出的幣
     blockchain.new_transaction(
         sender="0",
         recipient=node_identifier,
         amount=1,
     )
 
-    # Forge the new Block by adding it to the chain
+    # 通過將其添加到鏈中來創造新的塊
     block = blockchain.new_block(proof)
 
     response = {
@@ -212,12 +211,12 @@ def mine():
 def new_transaction():
     values = request.get_json()
 
-    # Check that the required fields are in the POST'ed data
+    # 確定是一個可實行的交易（資料充足與完備）
     required = ['sender', 'recipient', 'amount']
     if not all(k in values for k in required):
         return 'Missing values', 400
 
-    # Create a new Transaction
+    # 創建一新的交易
     index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
 
     response = {'message': f'Transaction will be added to Block {index}'}
